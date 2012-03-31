@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-ghc -O2 -threaded +RTS -N -sstderr -RTS Munemone.hs
+ghc -O2 +RTS -N -sstderr -RTS Munemone.hs -o munemone

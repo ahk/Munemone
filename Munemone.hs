@@ -1,4 +1,4 @@
-module Munemone.hs where
+module Main where
 import System.FilePath
 import System.FilePath.Glob
 import Database.Redis
@@ -11,7 +11,7 @@ import System.Environment
 
 {-DONE: read a dir for mp3s-}
 {-TODO: take read filenames put into DB-}
-{- hedis docs: http://hackage.haskell.org/packages/archive/hedis/0.4.1/doc/html/Database-Redis.html-}
+{-hedis docs: http://hackage.haskell.org/packages/archive/hedis/0.4.1/doc/html/Database-Redis.html-}
 
 testMp3 = joinPath ["a_fake_dir", "#1hit.mp3"]
 redisDB = 0
@@ -27,8 +27,9 @@ writeTracks = do
     set (b "world") (b "world")
     hello <- get (b "hello")
     world <- get (b "world")
-    liftIO $ print (hello,world)
-        where b = B.fromString
+    return (hello, world)
+    {-liftIO $ print (hello,world)-}
+    where b = B.fromString
 
 {-stupid thread reading code-}
 atomRead = atomically . readTVar
@@ -47,13 +48,10 @@ main = do
 
     conn <- connect defaultConnectInfo { connectMaxConnections = maxRedisConn }
     runRedis conn $ select redisDB
-    forkIO $ runRedis conn $ 50 `timesDo` writeTracks
-    forkIO $ runRedis conn $ 50 `timesDo` writeTracks
-    forkIO $ runRedis conn $ 50 `timesDo` writeTracks
-    {-forkIO $ 50 `timesDo` (appV ((+) 2) shared >> milliSleep 50)-}
-    {-forkIO $ 50 `timesDo` (appV pred shared >> milliSleep 25)-}
+    forkIO $ 50000 `timesDo` (appV ((+) 2) shared)
+    forkIO $ 50000 `timesDo` (appV pred shared)
+    forkIO $ 5000 `timesDo` (runRedis conn $ writeTracks)
 
     after <- atomRead shared
     putStrLn $ "After: " ++ show after
     where timesDo = replicateM_
-          milliSleep = threadDelay . (*) 1000
